@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections;
 using HarmonyLib;
+using PlaylistLoaderLite.UI;
+using UnityEngine;
 
 /// <summary>
 /// See https://github.com/pardeike/Harmony/wiki for a full reference on Harmony.
@@ -16,6 +19,7 @@ namespace PlaylistLoaderLite.HarmonyPatches
     public class PlaylistCollectionOverride
     {
         private static IAnnotatedBeatmapLevelCollection[] loadedPlaylists;
+        
         /// <summary>
         /// Adds this plugin's name to the beginning of the author text in the song list view.
         /// </summary>
@@ -41,10 +45,15 @@ namespace PlaylistLoaderLite.HarmonyPatches
             }
         }
 
-        public static int RefreshPlaylists()
+        public static IEnumerator RefreshPlaylists()
         {
-            loadedPlaylists = LoadPlaylistScript.Load();
-            return loadedPlaylists.Length;
+            PluginUI.instance.ArePlaylistsLoaded = false;
+            PluginUI.instance.ArePlaylistsLoading = true;
+            yield return LoadPlaylistScript.Load();
+            loadedPlaylists = LoadPlaylistScript.Current.ToArray();
+            PluginUI.instance.ArePlaylistsLoaded = true;
+            PluginUI.instance.ArePlaylistsLoading = false;
+            //return loadedPlaylists.Length;
         }
     }
 }

@@ -3,6 +3,8 @@ using UnityEngine;
 using SongCore;
 using System.Collections;
 using PlaylistLoaderLite.HarmonyPatches;
+using System;
+using IPA.Logging;
 
 namespace PlaylistLoaderLite.UI
 {
@@ -11,6 +13,9 @@ namespace PlaylistLoaderLite.UI
         public MenuButton _refreshButton;
         internal static ProgressBar _progressBar;
         const int MESSAGE_TIME = 5;
+
+        public bool ArePlaylistsLoaded { get; internal set; }
+        public bool ArePlaylistsLoading { get; internal set; }
 
         internal void Setup()
         {
@@ -41,12 +46,11 @@ namespace PlaylistLoaderLite.UI
         {
             if (!Loader.AreSongsLoading)
                 Loader.Instance.RefreshSongs();
-
             yield return new WaitUntil(() => Loader.AreSongsLoaded == true);
-            int numPlaylists = PlaylistCollectionOverride.RefreshPlaylists();
-
+            StartCoroutine(PlaylistCollectionOverride.RefreshPlaylists());
+            yield return new WaitWhile(() => !this.ArePlaylistsLoaded || this.ArePlaylistsLoading);
             _progressBar.enabled = true;
-            _progressBar.ShowMessage(string.Format("\n{0} playlists loaded.", numPlaylists), MESSAGE_TIME);
+            _progressBar.ShowMessage(string.Format("\n{0} playlists loaded.", LoadPlaylistScript.Current.Count), MESSAGE_TIME);
         }
     }
 }
